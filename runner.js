@@ -2,29 +2,57 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const net = require('bare-net')
 const { process } = require('spl/mycelium/runtime')
+const rpcServer = require('rpc-server')
 
 const testDir = path.dirname(typeof Bare !== 'undefined'
   ? Bare.argv[1] : __filename)
 
-// Check server is running
+const repoDir = path.resolve(testDir, '..')
+const serverDir = path.join(repoDir, '_server')
+
+// Check server is running (pid first, TCP fallback)
 function checkServer (cb) {
+  let status = rpcServer.pid.alive(serverDir)
+  if (status.alive) return cb(true)
+  // fallback to TCP in case pid file missing
   let con = net.connect(24950)
   con.on('connect', () => { con.end(); cb(true) })
   con.on('error', () => { cb(false) })
 }
 
-// Load suites from suites/ directory
+// Walk suites/ recursively, return { name, file } entries
+function walkSuites (dir, prefix) {
+  let entries = []
+  let items = fs.readdirSync(dir)
+  for (let item of items) {
+    let full = path.join(dir, item)
+    let stat = fs.statSync(full)
+    if (stat.isDirectory()) {
+      let sub = prefix ? prefix + '/' + item : item
+      entries = entries.concat(walkSuites(full, sub))
+    } else if (item.endsWith('.js')) {
+      let name = prefix
+        ? prefix + '/' + item.replace('.js', '')
+        : item.replace('.js', '')
+      entries.push({ name, file: full })
+    }
+  }
+  return entries
+}
+
+// Load suites from suites/ directory tree
 function loadSuites (filter) {
   let dir = path.join(testDir, 'suites')
-  let files = fs.readdirSync(dir).filter(f => f.endsWith('.js'))
+  let entries = walkSuites(dir, '')
   if (filter) {
-    files = files.filter(f => f.replace('.js', '') === filter || f === filter)
+    entries = entries.filter(function (e) {
+      return e.name === filter || e.name.startsWith(filter + '/')
+    })
   }
   let suites = []
-  for (let file of files) {
-    let name = file.replace('.js', '')
-    let tests = require(path.join(dir, file))
-    suites.push({ name, tests })
+  for (let entry of entries) {
+    let tests = require(entry.file)
+    suites.push({ name: entry.name, tests })
   }
   return suites
 }

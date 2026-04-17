@@ -1,4 +1,4 @@
-const { spl, expect } = require('../harness')
+const { spl, expect } = require('../../harness')
 
 module.exports = [
   {

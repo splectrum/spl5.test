@@ -1,5 +1,5 @@
 const path = require('bare-path')
-const { spl, splFrom, expect, repo } = require('../harness')
+const { spl, splFrom, expect, repo } = require('../../harness')
 
 module.exports = [
   {
