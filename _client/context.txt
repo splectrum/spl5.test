@@ -1,0 +1,6 @@
+# Test client vocabulary
+# Speaks test language, not xpath or git.
+
+run       spl.mycelium.test.run
+suite     spl.mycelium.test.suite
+report    spl.mycelium.test.report

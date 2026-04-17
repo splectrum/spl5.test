@@ -1,0 +1,8 @@
+{
+  "name": "test-fixture",
+  "version": "1.0.0",
+  "nested": {
+    "key": "value",
+    "list": ["a", "b", "c"]
+  }
+}
