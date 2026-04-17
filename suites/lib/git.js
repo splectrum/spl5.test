@@ -198,5 +198,50 @@ module.exports = [
       }
       return { pass: true, message: 'ok' }
     }
+  },
+
+  // --- remote ---
+  {
+    name: 'remote.list returns known remotes',
+    run () {
+      let remotes = git.remote.list(repo)
+      if (remotes.error) {
+        return { pass: false, message: remotes.error }
+      }
+      if (!remotes.origin) {
+        return { pass: false, message: 'origin not found in remotes' }
+      }
+      return { pass: true, message: Object.keys(remotes).length + ' remotes' }
+    }
+  },
+  {
+    name: 'remote.list includes subtree remotes',
+    run () {
+      let remotes = git.remote.list(repo)
+      if (!remotes['bare-for-pear-rpc-server']) {
+        return { pass: false, message: 'bare-for-pear-rpc-server not in remotes' }
+      }
+      return { pass: true, message: 'ok' }
+    }
+  },
+  {
+    name: 'remote.getPlatform defaults to github',
+    run () {
+      let p = git.remote.getPlatform()
+      if (p !== 'github') {
+        return { pass: false, message: 'expected github, got ' + p }
+      }
+      return { pass: true, message: 'ok' }
+    }
+  },
+  {
+    name: 'remote.repoUrl formats github url',
+    run () {
+      let url = git.remote.repoUrl('bare-for-pear/test')
+      if (url !== 'https://github.com/bare-for-pear/test.git') {
+        return { pass: false, message: 'unexpected url: ' + url }
+      }
+      return { pass: true, message: 'ok' }
+    }
   }
 ]
